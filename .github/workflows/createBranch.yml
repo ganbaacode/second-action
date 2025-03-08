@@ -5,4 +5,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get branch name
-        run: echo "The branch name is ${{ github.event.repository.name }}"
+        run: echo "The branch name is ${{ github.ref }}"
