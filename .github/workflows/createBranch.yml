@@ -1,0 +1,8 @@
+name: Create branch
+on: create
+jobs:
+  info:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get branch name
+        run: echo "The branch name is ${{ github.event.repository.name }}"
