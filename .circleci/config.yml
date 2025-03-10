@@ -1,0 +1,53 @@
+
+version: 2.1
+setup: true
+orbs:
+  node: circleci/node@5
+  continuation: circleci/continuation@0.1.2
+parameters:
+  GHA_Action:
+    type: string
+    default: ''
+  GHA_CommitSha:
+    type: string
+    default: ''
+  GHA_Workflow_Name:
+    type: string
+    default: ''
+  GHA_DeployTag:
+    type: string
+    default: ''
+
+jobs:
+  generate-config:
+    executor: continuation/default
+    steps:
+      - checkout
+      - node/install:
+          node-version: '20'
+      - run:
+          name: Write dynamic config
+          command: |
+            if [ "$CIRCLE_PULL_REQUEST" != "" ]; then
+              url="$(echo "$CIRCLE_PULL_REQUEST" | sed 's/https:\/\/github.com\//https:\/\/api.github.com\/repos\//' | sed 's/\/pull\//\/pulls\//')"
+              TARGET_BRANCH=$(
+                curl -s -H "Authorization: token $GITHUB_TOKEN" "$url" | jq -r '.base.ref' | tr -d '"'
+              )
+              echo "TARGET_BRANCH: $TARGET_BRANCH"
+            fi
+
+            SALT=$(echo $RANDOM | md5sum | head -c 10)
+
+            SALT=$SALT GHA_Workflow_Name="<< pipeline.parameters.GHA_Workflow_Name >>" TARGET_BRANCH="$TARGET_BRANCH" node .circleci/writeCircleCiConfig.js
+      - store_artifacts:
+          path: .circleci/new_config.yml
+          destination: new_config.yml
+      - continuation/continue:
+          configuration_path: .circleci/new_config.yml
+
+
+
+workflows:
+  setup_workflow:
+    jobs:
+      - generate-config
