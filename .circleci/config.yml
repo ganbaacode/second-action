@@ -1,57 +1,55 @@
-# This config was automatically generated from your source code
-# Stacks detected: cicd:github-actions:.github/workflows,deps:node:.
+
 version: 2.1
+setup: true
 orbs:
   node: circleci/node@5
+  continuation: circleci/continuation@0.1.2
+  gh-app-token: circleci/gh-app-token@0.0.1
+parameters:
+  GHA_Action:
+    type: string
+    default: ''
+  GHA_CommitSha:
+    type: string
+    default: ''
+  GHA_Workflow_Name:
+    type: string
+    default: ''
+  GHA_DeployTag:
+    type: string
+    default: ''
+
 jobs:
-  test-node:
-    # Install node dependencies and run tests
-    executor: node/default
+  generate-config:
+    executor: continuation/default
     steps:
       - checkout
       - node/install-packages:
           pkg-manager: npm
+      -gh-app-token/create
       - run:
-          name: Run tests
-          command: npm test --passWithNoTests
-  build-node:
-    # Build node project
-    executor: node/default
-    steps:
-      - checkout
-      - node/install-packages:
-          pkg-manager: npm
-      - run:
-          command: npm run build
-      - run:
-          name: Create the ~/artifacts directory if it doesn't exist
-          command: mkdir -p ~/artifacts
-      # Copy output to artifacts dir
-      - run:
-          name: Copy artifacts
-          command: cp -R build dist public .output .next .docusaurus ~/artifacts 2>/dev/null || true
+          name: Write dynamic config
+          command: |
+            if [ "$CIRCLE_PULL_REQUEST" != "" ]; then
+              url="$(echo "$CIRCLE_PULL_REQUEST" | sed 's/https:\/\/github.com\//https:\/\/api.github.com\/repos\//')" | sed 's/\/pull\//\/pulls\//')"
+              TARGET_BRANCH=$(
+                curl -s -H "Authorization: token $GITHUB_TOKEN" "$url" | jq -r '.base.ref' | tr -d '"'
+              )
+              echo "TARGET_BRANCH: $TARGET_BRANCH"
+            fi
+
+            SALT=$(echo $RANDOM | md5sum | head -c 10)
+
+            SALT=$SALT GHA_Workflow_Name="<< pipeline.parameters.GHA_Workflow_Name >>" TARGET_BRANCH="$TARGET_BRANCH" node .circleci/writeCircleCiConfig.js
       - store_artifacts:
-          path: ~/artifacts
-          destination: node-build
-  deploy:
-    # This is an example deploy job, not actually used by the workflow
-    docker:
-      - image: cimg/base:stable
-    steps:
-      # Replace this with steps to deploy to users
-      - run:
-          name: deploy
-          command: '#e.g. ./deploy.sh'
-      - run:
-          name: found github actions config
-          command: ':'
+          path: .circleci/new_config.yml
+          destination: new_config.yml
+      - continuation/continue:
+          config: .circleci/new_config.yml
+
+
+
 workflows:
-  build-and-test:
+  setup_workflow:
     jobs:
-      - test-node
-      - build-node:
-          requires:
-            - test-node
-    # - deploy:
-    #     requires:
-    #       - build-node
+      - generate-config

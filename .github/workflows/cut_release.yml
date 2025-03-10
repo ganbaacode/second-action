@@ -1,0 +1,29 @@
+name: Cut Release
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: 'put commit sha here'
+        required: true
+env:
+  CCI_TOKEN: ${{ secrets.CCI_TOKEN }}
+
+jobs:
+  cut-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          curl --request POST \
+            --url https://circleci.com/api/v2/project/gh/action-re/circleci/TJa8ZvtqZanyo25Ep7HGhT/SRz1kZJy8hLhYp4giMQs1p/pipeline \
+            --header 'Circle-Token: ${CCI_TOKEN}' \
+            --header 'content-type: application/json' \
+            --data '{"branch":"${{github.ref_name}}","parameters":{"GHA_Action":"cut_release","GHA_CommitSha":"${{inputs.commit_sha}}"}}' >> response.txt
+          echo "RESPONSE:"
+          cat response.txt
+          .github/scripts/workflow_url.sh cut_release
+      - name: Workflow URL
+        run: |
+          workflowUrl=$(cat workflowUrl.txt)
+          echo $workflowUrl
+        
