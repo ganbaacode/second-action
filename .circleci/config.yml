@@ -29,7 +29,7 @@ jobs:
           name: Write dynamic config
           command: |
             if [ "$CIRCLE_PULL_REQUEST" != "" ]; then
-              url="$(echo "$CIRCLE_PULL_REQUEST" | sed 's/https:\/\/github.com\//https:\/\/api.github.com\/repos\//')" | sed 's/\/pull\//\/pulls\//')"
+              url="$(echo "$CIRCLE_PULL_REQUEST" | sed 's/https:\/\/github.com\//https:\/\/api.github.com\/repos\//' | sed 's/\/pull\//\/pulls\//')"
               TARGET_BRANCH=$(
                 curl -s -H "Authorization: token $GITHUB_TOKEN" "$url" | jq -r '.base.ref' | tr -d '"'
               )
