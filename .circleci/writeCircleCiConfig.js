@@ -36,6 +36,34 @@ executors:
       image: ubuntu-2004:202111-01
       docker_layer_caching: true
 
+jobs:
+  build:
+    executor: ubuntu
+    resource_class: small
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: echo "Building app"
+  
+  deploy:
+    executor: ubuntu
+    resource_class: small
+    steps:
+      - checkout
+      - run:
+          name: Deploy
+          command: echo "Deploying app"
+  
+  test:
+    executor: ubuntu
+    resource_class: small
+    steps:
+      - checkout
+      - run:
+          name: Test
+          command: echo "Testing app"
+
 workflows:
   version: 2
 
@@ -44,13 +72,8 @@ workflows:
       equal: ["", << pipeline.parameters.GHA_Action >>]
     jobs:
       - build:
-          executor: ubuntu
-          resource_class: small
-          steps:
-            - checkout
-            - run:
-                name: build
-                command: echo "Building app"
+          context: org-global
+  
   ${process.env.GHA_Workflow_Name || 'deploy_app'}:
     when: 
       equal: ["deploy_app", << pipeline.parameters.GHA_Action >>]
@@ -63,6 +86,7 @@ workflows:
             branches:
               only:
                 - main
+  
   cut_release:
     when: 
       equal: ["cut_release", << pipeline.parameters.GHA_Action >>]
@@ -76,7 +100,7 @@ workflows:
             - node/install
             - run:
                 name: Cut Release
-                command: bash .circleci/scripts/cut_release.sh -a "<< pipeline.parameters.GHA_Action >>"
+                command: bash .circleci/scripts/cut_release.sh -a "<< pipeline.parameters.GHA_CommitSha >>"
     `;
     await writeFile(path.join(__dirname, '../.circleci/new_config.yml'), yaml);
 }
