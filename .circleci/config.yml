@@ -24,7 +24,7 @@ jobs:
     steps:
       - checkout
       - node/install:
-          node-version: 22
+          node-version: '20'
       - run:
           name: Write dynamic config
           command: |
