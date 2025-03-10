@@ -23,8 +23,8 @@ jobs:
     executor: continuation/default
     steps:
       - checkout
-      - node/install-packages:
-          pkg-manager: npm
+      - node/install:
+          node-version: 22
       - run:
           name: Write dynamic config
           command: |
