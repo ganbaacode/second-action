@@ -44,19 +44,13 @@ workflows:
       equal: ["", << pipeline.parameters.GHA_Action >>]
     jobs:
       - build:
-          context: org-global
-          filters:
-            branches:
-              only:
-                - main
-      - test:
-          context: org-global
-          requires:
-            - build
-          filters:
-            branches:
-              only:
-                - main
+          executor: ubuntu
+          resource_class: small
+          steps:
+            - checkout
+            - run:
+                name: build
+                command: echo "Building app"
   ${process.env.GHA_Workflow_Name || 'deploy_app'}:
     when: 
       equal: ["deploy_app", << pipeline.parameters.GHA_Action >>]
