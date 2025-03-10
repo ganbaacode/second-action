@@ -76,7 +76,6 @@ workflows:
                 steps:
                     - checkout
                     - node/install
-                    -gh-app-token/create
                     - run:
                         name: Cut Release
                         command: bash .circleci/scripts/cut_release.sh -a "<< pipeline.parameters.GHA_CommitSha >>"
