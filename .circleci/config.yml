@@ -43,7 +43,7 @@ jobs:
           path: .circleci/new_config.yml
           destination: new_config.yml
       - continuation/continue:
-          config: .circleci/new_config.yml
+          configuration_path: .circleci/new_config.yml
 
 
 
