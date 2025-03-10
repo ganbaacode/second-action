@@ -1,6 +1,6 @@
-const path = require('path');
-const fs = require('fs');
-const util = require('util');
+import path from 'path';
+import fs from 'fs';
+import util from 'util';
 
 
 const writeFile = util.promisify(fs.writeFile);
