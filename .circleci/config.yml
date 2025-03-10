@@ -4,7 +4,6 @@ setup: true
 orbs:
   node: circleci/node@5
   continuation: circleci/continuation@0.1.2
-  gh-app-token: circleci/gh-app-token@0.0.1
 parameters:
   GHA_Action:
     type: string
@@ -26,7 +25,6 @@ jobs:
       - checkout
       - node/install-packages:
           pkg-manager: npm
-      -gh-app-token/create
       - run:
           name: Write dynamic config
           command: |
