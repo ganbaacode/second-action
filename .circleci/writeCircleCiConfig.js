@@ -8,8 +8,7 @@ const __dirname = path.dirname(__filename);
 
 const writeFile = util.promisify(fs.writeFile);
 
-const writeCircleCiConfig = async (config) => {
-
+const writeCircleCiConfig = async () => {
     let yaml = `version: 2.1
 orbs:
  node: circleci/node@4.1.0
@@ -57,7 +56,7 @@ workflows:
             branches:
               only:
                 - main
-  ${process.env.GHA_wWorkflow_Name || 'deploy_app'}:
+  ${process.env.GHA_Workflow_Name || 'deploy_app'}:
     when: 
       equal: ["deploy_app", << pipeline.parameters.GHA_Action >> ]
     jobs:
@@ -74,14 +73,15 @@ workflows:
       equal: ["cut_release", << pipeline.parameters.GHA_Action >> ]
     jobs:
       - cut_release:
+          context: org-global
           executor: ubuntu
           resource_class: small
           steps:
             - checkout
             - node/install
-          - run:
-              name: Cut Release
-              command: bash .circleci/scripts/cut_release.sh -a "<< pipeline.parameters.GHA_CommitSha >>"
+            - run:
+                name: Cut Release
+                command: bash .circleci/scripts/cut_release.sh -a "<< pipeline.parameters.GHA_CommitSha >>"
     `;
     await writeFile(path.join(__dirname, '../.circleci/new_config.yml'), yaml);
 }
